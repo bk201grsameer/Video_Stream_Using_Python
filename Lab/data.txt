@@ -1,0 +1,41 @@
+0: Black
+1: Blue
+2: Green
+3: Aqua
+4: Red
+5: Purple
+6: Yellow
+7: White
+8: Gray
+9: Light Blue
+A: Light Green
+B: Light Aqua
+C: Light Red
+D: Light Purple
+E: Light Yellow
+F: Bright White
+
+
+I see, you're referring to the two loops that are responsible for receiving data in chunks and accumulating it. Let's break down their purposes:
+
+1. **First Loop** (Receiving Metadata):
+   ```python
+   while len(data) < metadata_size:
+       packet = self.client_socket.recv(4 * 1024)
+       if not packet:
+           break
+       data += packet
+   ```
+   - **Purpose**: This loop is responsible for receiving and accumulating the metadata, which is typically a small piece of information that precedes each video frame. The metadata might include details such as the size of the upcoming video frame.
+   - **Example Context**: Imagine that each video frame is preceded by 8 bytes of metadata specifying its size. This loop continuously receives data in 4 KB packets (4 * 1024 bytes) until it has accumulated enough data to extract the metadata.
+
+2. **Second Loop** (Receiving Video Frame Data):
+   ```python
+   msg_size = struct.unpack("Q", packed_msg_size)[0]
+   while len(data) < msg_size:
+       data += self.client_socket.recv(4 * 1024)
+   ```
+   - **Purpose**: This loop is used to receive and accumulate the actual video frame data, following the metadata. The `msg_size` variable, determined from the metadata, indicates the size of the upcoming video frame. This loop ensures that the entire video frame is received and accumulated.
+   - **Example Context**: Suppose the metadata indicated that the upcoming video frame is 100,000 bytes in size. This loop continuously receives data in 4 KB packets until the full 100,000 bytes of video frame data have been received.
+
+In summary, the first loop is responsible for collecting metadata that provides information about the upcoming video frame, and the second loop is responsible for accumulating the actual video frame data. Together, they ensure that both the metadata and the video frame data are fully received before processing and displaying the video frame. This approach allows the client to handle video frames of varying sizes and ensures that no data is lost during transmission.
